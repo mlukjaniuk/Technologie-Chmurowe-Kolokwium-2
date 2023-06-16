@@ -1,0 +1,48 @@
+version: '3'
+services:
+  app:
+    container_name: app
+    restart: always
+    build: .
+    ports:
+      - '3000:3000'
+    depends_on:
+      - mongo
+    networks:
+      - node-mongo-network
+    environment:
+      - MONGODB_HOST=mongo
+      - MONGODB_PORT=27017
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://localhost:3000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  mongo:
+    container_name: mongo
+    image: mongo
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongodb-data:/data/db
+    networks:
+      - node-mongo-network
+
+  nginx: 
+    container_name: nginx
+    image: nginx
+    ports:
+      - '80:80'
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - app
+    networks:
+      - node-mongo-network
+
+networks:
+  node-mongo-network:
+
+volumes:
+  mongodb-data:
